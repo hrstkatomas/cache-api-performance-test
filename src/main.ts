@@ -180,6 +180,7 @@ function displaySummary(
     totalSizeMB: number;
     openTimeMs: number;
     matchTimeMs: number;
+    putTimeMs: number;
     timestamp: number;
   }>,
   durationMs: number,
@@ -198,11 +199,14 @@ function displaySummary(
   const lastResult = results[results.length - 1];
   const openTimes = results.map((r) => r.openTimeMs);
   const matchTimes = results.map((r) => r.matchTimeMs);
+  const putTimes = results.map((r) => r.putTimeMs);
 
   const avgOpen = openTimes.reduce((a, b) => a + b, 0) / openTimes.length;
   const avgMatch = matchTimes.reduce((a, b) => a + b, 0) / matchTimes.length;
+  const avgPut = putTimes.reduce((a, b) => a + b, 0) / putTimes.length;
   const maxOpen = Math.max(...openTimes);
   const maxMatch = Math.max(...matchTimes);
+  const maxPut = Math.max(...putTimes);
 
   summaryContent.innerHTML = `
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
@@ -229,6 +233,14 @@ function displaySummary(
         <p><strong>First:</strong> ${results[0].matchTimeMs.toFixed(2)} ms</p>
         <p><strong>Last:</strong> ${lastResult.matchTimeMs.toFixed(2)} ms</p>
       </div>
+
+      <div>
+        <h3>cache.put() Performance</h3>
+        <p><strong>Average:</strong> ${avgPut.toFixed(2)} ms</p>
+        <p><strong>Maximum:</strong> ${maxPut.toFixed(2)} ms</p>
+        <p><strong>First:</strong> ${results[0].putTimeMs.toFixed(2)} ms</p>
+        <p><strong>Last:</strong> ${lastResult.putTimeMs.toFixed(2)} ms</p>
+      </div>
     </div>
 
     <div style="margin-top: 20px;">
@@ -249,6 +261,7 @@ function getPerformanceAnalysis(
     totalSizeMB: number;
     openTimeMs: number;
     matchTimeMs: number;
+    putTimeMs: number;
   }>,
 ): string {
   if (results.length < 2) {
@@ -262,6 +275,10 @@ function getPerformanceAnalysis(
     ((last.openTimeMs - first.openTimeMs) / first.openTimeMs) * 100;
   const matchIncrease =
     ((last.matchTimeMs - first.matchTimeMs) / first.matchTimeMs) * 100;
+  const putIncrease =
+    first.putTimeMs > 0
+      ? ((last.putTimeMs - first.putTimeMs) / first.putTimeMs) * 100
+      : 0;
 
   let analysis = "";
 
@@ -278,13 +295,24 @@ function getPerformanceAnalysis(
 
   if (matchIncrease < 10) {
     analysis +=
-      "<strong>cache.match()</strong> maintains consistent performance across cache sizes.";
+      "<strong>cache.match()</strong> maintains consistent performance across cache sizes. ";
   } else if (matchIncrease < 50) {
     analysis +=
-      "<strong>cache.match()</strong> shows moderate slowdown with larger cache sizes.";
+      "<strong>cache.match()</strong> shows moderate slowdown with larger cache sizes. ";
   } else {
     analysis +=
-      "<strong>cache.match()</strong> experiences notable performance degradation at scale.";
+      "<strong>cache.match()</strong> experiences notable performance degradation at scale. ";
+  }
+
+  if (putIncrease < 10) {
+    analysis +=
+      "<strong>cache.put()</strong> maintains consistent performance across cache sizes.";
+  } else if (putIncrease < 50) {
+    analysis +=
+      "<strong>cache.put()</strong> shows moderate slowdown with larger cache sizes.";
+  } else {
+    analysis +=
+      "<strong>cache.put()</strong> experiences notable performance degradation at scale.";
   }
 
   return analysis;

@@ -8,6 +8,27 @@ A TypeScript-based performance testing tool to measure Cache API behavior under 
 
 Watch the tool in action: incrementally adding assets to the cache and measuring performance in real-time.
 
+## The Test Result
+
+![Cache API Performance Test results](/public/assets/test-result.png)
+
+The times for `cache.open` and `cache.match` appear to remain constant over time. However, the times for `Cache.put` do increase slightly as the cache fills with data.
+
+**One notable discovery is that the very first `cache.open` call can take a significant amount of time depending on how much data the cache currently holds. The exact duration varies, but I have observed delays of up to 15 seconds when storing gigabyte of data in the cache.**
+
+**This issue is further compounded by a bug in Chromium (tagged as "Won't fix" for security reasons) which you can read about here: https://issues.chromium.org/issues/40555289#comment18. Storing opaque responses blows blows the cache out of proportion as responses are inflated to ~7MB per request.**
+
+This is most probably the root cause of the performance issues some of our users have been reporting.
+
+### Further actions:
+
+- Do not store "opaque" responses to prevent the cache from exploding in size
+- Implement time-based eviction strategy on top of Cache interface to prevent unbound growth over time.
+
+---
+
+# About the poject
+
 ## What It Does
 
 This tool helps you understand how `caches.open()` and `cache.match()` performance degrades as the cache grows to production-scale sizes. It:

@@ -6,6 +6,7 @@ export interface TestResult {
   totalSizeMB: number;
   openTimeMs: number;
   matchTimeMs: number;
+  putTimeMs: number;
   timestamp: number;
 }
 
@@ -67,8 +68,18 @@ export class CacheTester {
 
       // Add batch of assets
       const batch = this.generator.generateAssets(stepSize);
-      // console.log(batch.map((asset) => asset.url));
-      await this.addBatchToCache(batch);
+
+      // Measure cache.put()
+      if (onProgress) {
+        onProgress({
+          current: i,
+          total: assetsNeeded,
+          percentComplete: (i / assetsNeeded) * 100,
+          currentPhase: `Measuring cache.put() [${i} assets]`,
+        });
+      }
+      const putTime = await this.measureCachePut(batch);
+
       currentAssetCount = i;
 
       // Measure caches.open()
@@ -99,6 +110,7 @@ export class CacheTester {
         totalSizeMB: Math.round(i * avgAssetSizeMB * 100) / 100,
         openTimeMs: openTime,
         matchTimeMs: matchTime,
+        putTimeMs: putTime,
         timestamp: Date.now(),
       };
 
@@ -110,7 +122,7 @@ export class CacheTester {
       }
 
       console.log(
-        `Progress: ${i}/${assetsNeeded} assets, ${result.totalSizeMB}MB, open: ${openTime}ms, match: ${matchTime}ms`,
+        `Progress: ${i}/${assetsNeeded} assets, ${result.totalSizeMB}MB, open: ${openTime}ms, match: ${matchTime}ms, put: ${putTime}ms`,
       );
     }
 
@@ -146,6 +158,19 @@ export class CacheTester {
       await cache.put(asset.url, asset.content.clone());
       this.cachedUrls.push(asset.url);
     }
+  }
+
+  /**
+   * Measure cache.put() performance (adds first asset from batch; only place it is put)
+   */
+  private async measureCachePut(
+    batch: ReturnType<AssetGenerator["generateAssets"]>,
+  ): Promise<number> {
+    const putTime = await this.tracker.measureRepeated(async () => {
+      await this.addBatchToCache(batch);
+    }, 1);
+
+    return putTime;
   }
 
   /**

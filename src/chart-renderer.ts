@@ -38,6 +38,15 @@ export class ChartRenderer {
             tension: 0.1,
             pointRadius: 4,
             pointHoverRadius: 6
+          },
+          {
+            label: 'cache.put() (ms)',
+            data: [],
+            borderColor: 'rgb(153, 102, 255)',
+            backgroundColor: 'rgba(153, 102, 255, 0.1)',
+            tension: 0.1,
+            pointRadius: 4,
+            pointHoverRadius: 6
           }
         ]
       },
@@ -121,6 +130,7 @@ export class ChartRenderer {
     // Add data points
     this.chart.data.datasets[0].data.push(result.openTimeMs);
     this.chart.data.datasets[1].data.push(result.matchTimeMs);
+    this.chart.data.datasets[2].data.push(result.putTimeMs);
 
     // Update the chart
     this.chart.update('none'); // 'none' disables animation for better performance
@@ -137,6 +147,7 @@ export class ChartRenderer {
     this.chart.data.labels = [];
     this.chart.data.datasets[0].data = [];
     this.chart.data.datasets[1].data = [];
+    this.chart.data.datasets[2].data = [];
     this.chart.update();
   }
 

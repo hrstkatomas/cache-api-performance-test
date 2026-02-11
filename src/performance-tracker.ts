@@ -15,14 +15,11 @@ export class PerformanceTracker {
    */
   async measureRepeated(
     fn: () => Promise<any>,
-    iterations: number = 5
+    iterations: number = 5,
   ): Promise<number> {
     if (iterations < 1) {
-      throw new Error('Iterations must be at least 1');
+      throw new Error("Iterations must be at least 1");
     }
-
-    // Warm-up run (discard)
-    await fn();
 
     // Actual measurements
     const timings: number[] = [];
@@ -58,7 +55,7 @@ export class PerformanceTracker {
       min: sorted[0],
       max: sorted[sorted.length - 1],
       avg: sum / timings.length,
-      median: sorted[Math.floor(sorted.length / 2)]
+      median: sorted[Math.floor(sorted.length / 2)],
     };
   }
 }
