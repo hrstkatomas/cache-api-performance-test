@@ -25,6 +25,19 @@ This is most probably the root cause of the performance issues some of our users
 - Do not store "opaque" responses to prevent the cache from exploding in size
 - Implement time-based eviction strategy on top of Cache interface to prevent unbound growth over time.
 
+### Update:
+
+Removing the caching of opaque responses makes the offline experience virtually useless. Without it, you end up with plain HTML, but no CSS, JavaScript, or images.
+
+There is a way to avoid opaque responses by changing the default no-cors mode of asset requests to opt into CORS mode. To explicitly trigger a CORS request that yields a non-opaque response, you need to opt into CORS mode by adding the `crossorigin` attribute to your HTML elements. For instance:
+
+```html
+<link crossorigin="anonymous" rel="stylesheet" href="..." />
+<img crossorigin="anonymous" src="..." />
+```
+
+This needs to be applied everywhere, and all servers must be configured to provide CORS headers for all those requests. It may require some extra work, but it can be done.
+
 ---
 
 # About the poject
